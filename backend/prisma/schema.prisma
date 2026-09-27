@@ -1,0 +1,48 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  campaigns Campaign[]
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  name        String
+  subject     String
+  body        String
+  startAt     DateTime
+  delayMs     Int      @default(1000)
+  hourlyLimit Int      @default(100)
+  status      String   @default("scheduled")
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  recipients  Recipient[]
+}
+
+model Recipient {
+  id         String   @id @default(uuid())
+  email      String
+  status     String   @default("pending")
+  scheduledAt DateTime?
+  sentAt     DateTime?
+  error      String?
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  @@unique([campaignId, email])
+}
